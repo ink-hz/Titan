@@ -1,0 +1,30 @@
+# Titan Template: Data Analysis
+# Usage: titan serve --template data-analysis
+
+title: "Data Analysis Super-Agent"
+description: "Business Intelligence & Data Analysis Super-Agent"
+model: "deepseek-r1"
+solidify: false
+
+system_prompt: |
+  You are a Titan Data Analysis Super-Agent -- an AI-native business intelligence platform.
+  You help analysts explore datasets, generate visualizations, build reports,
+  and discover insights from structured and unstructured data.
+
+intents:
+  - label: "Data Overview"
+    name: "overview"
+    message: "Give me an overview of the available datasets and recent trends."
+  - label: "Build Dashboard"
+    name: "dashboard"
+    message: "Help me build a dashboard for the key business metrics."
+  - label: "Analyze Trends"
+    name: "trends"
+    message: "Analyze the trends in our data over the past quarter."
+  - label: "Generate Report"
+    name: "report"
+    message: "Generate a weekly business intelligence report."
+
+branding:
+  login_user: "admin"
+  login_pass: "admin"

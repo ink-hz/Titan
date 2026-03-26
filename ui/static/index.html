@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titan — Super-Agent Product</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g1' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='0%25' stop-color='%23000'/%3E%3Cstop offset='35%25' stop-color='%23000'/%3E%3Cstop offset='50%25' stop-color='%2306b6d4'/%3E%3Cstop offset='70%25' stop-color='%233b82f6'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='28' fill='url(%23g1)'/%3E%3Ccircle cx='32' cy='32' r='10' fill='%23000'/%3E%3C/svg%3E">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --bg-card-hover: #1f2b3d;
+            --border: #2a3a4e;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-dim: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --cat-perception: #3b82f6;
+            --cat-decision: #8b5cf6;
+            --cat-execution: #ef4444;
+            --cat-presentation: #f59e0b;
+            --cat-memory: #10b981;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary); color: var(--text-primary);
+            height: 100vh; overflow: hidden;
+        }
+        body::before {
+            content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(6,182,212,0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(59,130,246,0.05) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 80%, rgba(139,92,246,0.04) 0%, transparent 50%);
+            z-index: 0; pointer-events: none; animation: bgShift 20s ease-in-out infinite alternate;
+        }
+        @keyframes bgShift { 0%{transform:translate(0,0)} 100%{transform:translate(-3%,2%)} }
+        body > * { position: relative; z-index: 1; }
+
+        /* -- Header -- */
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 24px; height: 52px;
+            background: linear-gradient(180deg, rgba(17,24,39,0.95), rgba(10,14,23,0.95));
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .logo {
+            font-size: 22px; font-weight: 700; letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+            background-size: 200% 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: logoGlow 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 8px rgba(6,182,212,0.3));
+        }
+        @keyframes logoGlow { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+        .logo-sub { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; }
+        .blackhole { width: 36px; height: 36px; position: relative; flex-shrink: 0; }
+        .blackhole-core {
+            position: absolute; top: 50%; left: 50%; width: 12px; height: 12px;
+            background: #000; border-radius: 50%; transform: translate(-50%,-50%);
+            box-shadow: 0 0 8px 2px rgba(0,0,0,0.8); z-index: 3;
+        }
+        .blackhole-disk {
+            position: absolute; top: 50%; left: 50%; width: 34px; height: 34px;
+            border-radius: 50%; transform: translate(-50%,-50%);
+            background: conic-gradient(from 0deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple), var(--accent-cyan));
+            animation: bhSpin 4s linear infinite; z-index: 1;
+        }
+        .blackhole-disk::after {
+            content: ''; position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px;
+            border-radius: 50%; background: radial-gradient(circle, #000 40%, transparent 70%); z-index: 2;
+        }
+        .blackhole-glow {
+            position: absolute; top: 50%; left: 50%; width: 36px; height: 36px;
+            border-radius: 50%; transform: translate(-50%,-50%);
+            box-shadow: 0 0 16px 4px rgba(6,182,212,0.3), 0 0 32px 8px rgba(59,130,246,0.15);
+            animation: bhPulse 3s ease-in-out infinite; z-index: 0;
+        }
+        @keyframes bhSpin { 0%{transform:translate(-50%,-50%) rotate(0deg)} 100%{transform:translate(-50%,-50%) rotate(360deg)} }
+        @keyframes bhPulse { 0%,100%{opacity:0.7;transform:translate(-50%,-50%) scale(1)} 50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)} }
+        .blackhole-lg { width: 72px; height: 72px; margin: 0 auto 16px; }
+        .blackhole-lg .blackhole-core { width: 22px; height: 22px; }
+        .blackhole-lg .blackhole-disk { width: 66px; height: 66px; }
+        .blackhole-lg .blackhole-disk::after { top: 7px; left: 7px; right: 7px; bottom: 7px; }
+        .blackhole-lg .blackhole-glow {
+            width: 72px; height: 72px;
+            box-shadow: 0 0 24px 8px rgba(6,182,212,0.25), 0 0 48px 16px rgba(59,130,246,0.12), 0 0 64px 24px rgba(139,92,246,0.08);
+        }
+        .status-bar { display: flex; align-items: center; gap: 20px; }
+        .status-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); animation: pulse 2s ease-in-out infinite; }
+        .status-dot.busy { background: var(--accent-cyan); animation: pulse-fast 1s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        @keyframes pulse-fast { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.3)} }
+
+        /* -- Main Layout -- */
+        .main { display: grid; grid-template-columns: 1fr 1fr; height: calc(100vh - 52px - 36px); }
+        .main.workbench-collapsed { grid-template-columns: 1fr 0; }
+
+        /* -- Left: Conversation -- */
+        .panel-conv {
+            display: flex; flex-direction: column; overflow: hidden;
+            border-right: 1px solid var(--border); position: relative;
+        }
+        .panel-conv::after {
+            content: ''; position: absolute; top: 0; right: -1px; width: 1px; height: 100%;
+            background: linear-gradient(180deg, transparent, rgba(6,182,212,0.15) 30%, rgba(59,130,246,0.1) 70%, transparent);
+            pointer-events: none;
+        }
+        .panel-title {
+            padding: 12px 20px; font-size: 13px; font-weight: 600; color: var(--text-secondary);
+            border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;
+            background: linear-gradient(90deg, rgba(6,182,212,0.03), transparent 40%); position: relative;
+        }
+        .panel-title::after {
+            content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, rgba(6,182,212,0.2), transparent 60%);
+        }
+        .conv-messages {
+            flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 16px;
+        }
+        .conv-messages::-webkit-scrollbar { width: 4px; }
+        .conv-messages::-webkit-scrollbar-thumb { background: rgba(6,182,212,0.2); border-radius: 2px; }
+
+        /* Messages */
+        .msg { animation: msgAppear 0.4s cubic-bezier(0.16,1,0.3,1); }
+        @keyframes msgAppear { from{opacity:0;transform:translateY(12px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+        .msg-user { display: flex; justify-content: flex-end; }
+        .msg-user .msg-bubble {
+            max-width: 70%; padding: 10px 16px; border-radius: 16px 16px 4px 16px;
+            background: linear-gradient(135deg, var(--accent-blue), #6366f1); color: white; font-size: 14px; line-height: 1.6;
+            box-shadow: 0 2px 12px rgba(59,130,246,0.25);
+        }
+        .msg-agent { display: flex; flex-direction: column; gap: 8px; }
+        .msg-agent-label {
+            font-size: 11px; color: var(--accent-cyan); font-weight: 600; display: flex; align-items: center; gap: 6px;
+        }
+        .msg-agent-label .agent-avatar {
+            width: 18px; height: 18px; position: relative; display: inline-block; flex-shrink: 0;
+        }
+        .msg-agent-label .agent-avatar::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 18px; height: 18px; border-radius: 50%;
+            background: conic-gradient(from 0deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple), var(--accent-cyan));
+            animation: bhSpin 3s linear infinite;
+        }
+        .msg-agent-label .agent-avatar::after {
+            content: ''; position: absolute; top: 4px; left: 4px; width: 10px; height: 10px; border-radius: 50%;
+            background: radial-gradient(circle, #000 50%, transparent 70%);
+        }
+        .msg-agent-text {
+            font-size: 14px; line-height: 1.8; color: var(--text-primary);
+            padding: 12px 16px;
+            background: linear-gradient(145deg, rgba(26,35,50,0.7), rgba(17,24,39,0.8));
+            border: 1px solid var(--border); border-radius: 4px 16px 16px 16px;
+            border-left: 3px solid var(--accent-cyan);
+            white-space: pre-wrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: relative; overflow: hidden;
+        }
+        .msg-agent-text.streaming::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), var(--accent-blue), transparent);
+            animation: scanLine 2s ease-in-out infinite;
+        }
+        @keyframes scanLine { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+        .msg-agent-text strong { color: var(--accent-yellow); }
+        .msg-typing {
+            color: var(--accent-cyan); font-style: italic; display: flex; align-items: center; gap: 8px;
+        }
+        .msg-typing::after {
+            content: ''; display: inline-block; width: 20px; height: 4px;
+            background: linear-gradient(90deg, var(--accent-cyan), transparent);
+            border-radius: 2px; animation: typingPulse 1s ease-in-out infinite;
+        }
+        @keyframes typingPulse { 0%,100%{opacity:0.3;width:20px} 50%{opacity:1;width:32px} }
+        .msg-components { display: flex; flex-direction: column; gap: 12px; }
+
+        /* Input area */
+        .conv-input-area {
+            padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px;
+            position: relative; background: linear-gradient(180deg, rgba(10,14,23,0.3), rgba(10,14,23,0.6));
+        }
+        .conv-input-area::before {
+            content: ''; position: absolute; top: -1px; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent 10%, rgba(6,182,212,0.12), rgba(59,130,246,0.08), transparent 90%);
+        }
+        .conv-input {
+            flex: 1; padding: 10px 14px; background: rgba(26,35,50,0.6); border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text-primary); font-size: 14px; outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .conv-input:focus {
+            border-color: var(--accent-blue); box-shadow: 0 0 12px rgba(59,130,246,0.15);
+        }
+        .conv-input::placeholder { color: var(--text-dim); }
+        .send-btn {
+            padding: 10px 20px; background: linear-gradient(135deg, var(--accent-blue), #6366f1); color: white; border: none;
+            border-radius: 10px; font-size: 14px; cursor: pointer; font-weight: 500;
+            box-shadow: 0 2px 10px rgba(59,130,246,0.3); transition: all 0.2s;
+        }
+        .send-btn:hover { box-shadow: 0 4px 16px rgba(59,130,246,0.45); transform: translateY(-1px); }
+        .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* -- Right: Workspace -- */
+        .panel-wb {
+            display: flex; flex-direction: column; overflow: hidden;
+            background: linear-gradient(180deg, rgba(17,24,39,0.6), rgba(10,14,23,0.8));
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            transition: width 0.3s; position: relative;
+        }
+        .panel-wb::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.04) 0%, transparent 60%);
+            pointer-events: none; z-index: 0;
+        }
+        .main.workbench-collapsed .panel-wb { display: none; }
+        .wb-toggle {
+            margin-left: auto; font-size: 11px; color: var(--text-dim); cursor: pointer;
+            padding: 3px 10px; border-radius: 6px; border: 1px solid rgba(42,58,78,0.4); transition: all 0.2s;
+        }
+        .wb-toggle:hover { background: rgba(6,182,212,0.1); color: var(--accent-cyan); border-color: rgba(6,182,212,0.3); }
+        .ws-workspace { flex: 1; overflow-y: auto; display: flex; flex-direction: column; position: relative; z-index: 2; }
+        .ws-workspace::-webkit-scrollbar { width: 4px; }
+        .ws-workspace::-webkit-scrollbar-thumb { background: rgba(6,182,212,0.2); border-radius: 2px; }
+
+        /* Welcome state */
+        .welcome {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; opacity: 0.7; padding: 40px;
+        }
+        .welcome-title { font-size: 18px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; }
+        .welcome-sub { font-size: 13px; color: var(--text-dim); text-align: center; line-height: 1.8; }
+
+        /* Workspace session cards */
+        .ws-session { padding: 12px; animation: msgAppear 0.4s ease-out; }
+        .ws-session-header {
+            font-size: 11px; color: var(--text-dim); padding: 4px 8px; margin-bottom: 8px;
+            border-left: 2px solid var(--accent-cyan);
+        }
+        .ws-vcard {
+            background: linear-gradient(145deg, rgba(26,35,50,0.8), rgba(17,24,39,0.9));
+            border: 1px solid rgba(42,58,78,0.6); border-radius: 10px; overflow: hidden;
+            margin-bottom: 8px; animation: vcardAppear 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        @keyframes vcardAppear { from{opacity:0;transform:translateY(8px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+        .ws-vcard-header {
+            padding: 10px 14px; display: flex; align-items: center; gap: 8px;
+            border-bottom: 1px solid rgba(42,58,78,0.4); background: rgba(0,0,0,0.15);
+        }
+        .ws-vcard-icon { font-size: 14px; }
+        .ws-vcard-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); flex: 1; }
+        .ws-vcard-status {
+            font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500;
+        }
+        .ws-vcard-status.running { background: rgba(6,182,212,0.15); color: var(--accent-cyan); animation: pulse 1.5s ease-in-out infinite; }
+        .ws-vcard-status.done { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+        .ws-vcard-body { padding: 10px 14px; }
+
+        /* Thinking block */
+        .thinking-block {
+            background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.15);
+            border-radius: 8px; padding: 10px 14px; font-size: 11px; color: var(--text-dim);
+            line-height: 1.6; max-height: 200px; overflow-y: auto; white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .thinking-block::-webkit-scrollbar { width: 3px; }
+        .thinking-block::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.2); border-radius: 2px; }
+
+        /* Tool trace */
+        .tool-trace {
+            display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+            font-size: 11px; border-radius: 6px; margin-bottom: 4px;
+        }
+        .tool-trace .tool-category {
+            font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 600;
+        }
+        .tool-trace .tool-name { color: var(--text-secondary); font-family: monospace; }
+        .tool-trace .tool-result { color: var(--text-dim); margin-left: auto; }
+        .tool-trace .tool-time { color: var(--text-dim); font-size: 10px; }
+        .tool-trace.running { background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.15); }
+        .tool-trace.done { background: rgba(16,185,129,0.04); border: 1px solid rgba(16,185,129,0.1); }
+
+        /* Component containers */
+        .comp-container {
+            background: linear-gradient(145deg, rgba(26,35,50,0.7), rgba(17,24,39,0.8));
+            border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+        }
+        .comp-title {
+            padding: 10px 14px; font-size: 12px; font-weight: 600; color: var(--text-secondary);
+            border-bottom: 1px solid rgba(42,58,78,0.4); background: rgba(0,0,0,0.15);
+        }
+        .comp-body { padding: 12px 14px; }
+        .chart-container { width: 100%; height: 220px; }
+
+        /* Metric cards */
+        .metric-cards { display: flex; gap: 8px; flex-wrap: wrap; }
+        .metric-card {
+            flex: 1; min-width: 100px; padding: 12px; text-align: center;
+            background: rgba(0,0,0,0.2); border: 1px solid rgba(42,58,78,0.4); border-radius: 8px;
+        }
+        .metric-value { font-size: 20px; font-weight: 700; font-family: monospace; }
+        .metric-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+        .color-blue { color: var(--accent-blue); }
+        .color-cyan { color: var(--accent-cyan); }
+        .color-green { color: var(--accent-green); }
+        .color-yellow { color: var(--accent-yellow); }
+        .color-red { color: var(--accent-red); }
+        .color-purple { color: var(--accent-purple); }
+
+        /* Table */
+        .comp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .comp-table th {
+            padding: 8px 10px; text-align: left; font-weight: 600; color: var(--text-secondary);
+            border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.15);
+        }
+        .comp-table td { padding: 6px 10px; color: var(--text-primary); border-bottom: 1px solid rgba(42,58,78,0.3); }
+        .comp-table tr:hover td { background: rgba(6,182,212,0.04); }
+
+        /* Timeline */
+        .timeline { display: flex; flex-direction: column; gap: 8px; }
+        .tl-item { display: flex; gap: 10px; align-items: flex-start; }
+        .tl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; background: var(--accent-cyan); }
+        .tl-dot.critical { background: var(--accent-red); }
+        .tl-dot.high { background: var(--accent-yellow); }
+        .tl-time { font-size: 10px; color: var(--text-dim); min-width: 50px; }
+        .tl-title { font-size: 12px; color: var(--text-primary); font-weight: 500; }
+        .tl-desc { font-size: 11px; color: var(--text-dim); }
+
+        /* Approval card */
+        .approval-card-inner { text-align: center; padding: 8px; }
+        .approval-title { font-size: 14px; font-weight: 600; color: var(--accent-yellow); margin-bottom: 8px; }
+        .approval-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+        .approval-btns { display: flex; gap: 8px; justify-content: center; }
+        .approval-btn {
+            padding: 8px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; font-weight: 500;
+        }
+        .approval-btn.primary { background: var(--accent-green); color: white; }
+        .approval-btn.secondary { background: rgba(42,58,78,0.6); color: var(--text-secondary); border: 1px solid var(--border); }
+        .approval-done { color: var(--accent-green); font-size: 13px; text-align: center; padding: 12px; }
+
+        /* -- Quick Bar -- */
+        .quick-bar {
+            display: flex; align-items: center; gap: 8px; padding: 6px 24px; height: 36px;
+            background: linear-gradient(180deg, rgba(10,14,23,0.9), rgba(10,14,23,0.95));
+            border-top: 1px solid var(--border); overflow-x: auto;
+        }
+        .quick-label { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+        .quick-btn {
+            padding: 4px 12px; font-size: 11px; border-radius: 14px; cursor: pointer;
+            border: 1px solid rgba(42,58,78,0.5); background: transparent; color: var(--text-secondary);
+            white-space: nowrap; transition: all 0.2s;
+        }
+        .quick-btn:hover { background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.3); color: var(--accent-cyan); }
+        .stats-bar { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+        .stat-chip { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-dim); }
+        .stat-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+        /* -- Login Page -- */
+        .login-page {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-primary);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999; overflow: hidden;
+        }
+        .login-page::before {
+            content: ''; position: absolute; top: 50%; left: 50%; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(6,182,212,0.12) 0%, rgba(59,130,246,0.06) 40%, transparent 70%);
+            transform: translate(-50%, -50%); animation: loginGlow 6s ease-in-out infinite alternate;
+        }
+        .login-page::after {
+            content: ''; position: absolute; top: 30%; right: 20%; width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 60%);
+            animation: loginGlow2 8s ease-in-out infinite alternate;
+        }
+        @keyframes loginGlow { 0%{opacity:0.6;transform:translate(-50%,-50%) scale(1)} 100%{opacity:1;transform:translate(-50%,-50%) scale(1.15)} }
+        @keyframes loginGlow2 { 0%{opacity:0.4;transform:scale(1)} 100%{opacity:0.8;transform:scale(1.2)} }
+        .login-card {
+            width: 380px; padding: 48px 40px;
+            background: linear-gradient(145deg, rgba(17,24,39,0.9), rgba(10,14,23,0.95));
+            border: 1px solid rgba(42,58,78,0.5); border-radius: 20px; text-align: center;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 40px rgba(6,182,212,0.06);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            position: relative; z-index: 1; animation: cardFloat 0.6s ease-out;
+        }
+        @keyframes cardFloat { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .login-logo {
+            font-size: 42px; font-weight: 700; letter-spacing: 6px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+            background-size: 200% 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 6px; animation: logoGlow 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 16px rgba(6,182,212,0.4));
+        }
+        .login-subtitle { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 36px; }
+        .login-form { display: flex; flex-direction: column; gap: 14px; }
+        .login-input {
+            width: 100%; padding: 12px 16px; font-size: 14px;
+            background: rgba(10,14,23,0.6); color: var(--text-primary);
+            border: 1px solid rgba(42,58,78,0.5); border-radius: 10px; outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .login-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 12px rgba(6,182,212,0.15); }
+        .login-input::placeholder { color: var(--text-dim); }
+        .login-btn {
+            width: 100%; padding: 13px; margin-top: 8px; font-size: 15px; font-weight: 600;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), #6366f1);
+            background-size: 200% 200%; animation: loginBtnGlow 3s ease-in-out infinite;
+            color: white; border: none; border-radius: 10px; cursor: pointer;
+            box-shadow: 0 4px 16px rgba(6,182,212,0.3); transition: box-shadow 0.3s, transform 0.2s;
+        }
+        .login-btn:hover { box-shadow: 0 6px 24px rgba(6,182,212,0.45); transform: translateY(-1px); }
+        @keyframes loginBtnGlow { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+        .login-error { font-size: 13px; color: var(--accent-red); min-height: 20px; }
+        .login-footer { margin-top: 32px; font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; }
+    </style>
+</head>
+<body>
+
+<!-- Login Page -->
+<div id="loginPage" class="login-page">
+    <div class="login-card">
+        <div class="blackhole blackhole-lg">
+            <div class="blackhole-glow"></div>
+            <div class="blackhole-disk"></div>
+            <div class="blackhole-core"></div>
+        </div>
+        <div class="login-logo">TITAN</div>
+        <div class="login-subtitle" id="loginSubtitle">Super-Agent Product Platform</div>
+        <div class="login-form">
+            <input type="text" id="loginUser" class="login-input" placeholder="Account" autocomplete="off" />
+            <input type="password" id="loginPass" class="login-input" placeholder="Password" autocomplete="off" />
+            <div id="loginError" class="login-error"></div>
+            <button class="login-btn" onclick="doLogin()">Login</button>
+        </div>
+        <div class="login-footer" id="loginFooter">Titan -- From Agent Framework to Agent Product</div>
+    </div>
+</div>
+
+<!-- Header -->
+<div class="header" id="appHeader" style="display:none;">
+    <div class="header-left">
+        <div class="blackhole">
+            <div class="blackhole-glow"></div>
+            <div class="blackhole-disk"></div>
+            <div class="blackhole-core"></div>
+        </div>
+        <div>
+            <div class="logo">TITAN</div>
+            <div class="logo-sub" id="headerSub">Super-Agent Product</div>
+        </div>
+    </div>
+    <div class="status-bar">
+        <div class="status-item">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Ready</span>
+        </div>
+        <div class="status-item">
+            <span style="color:var(--text-dim)">Model</span>
+            <span style="color:var(--accent-green)" id="modelLabel">--</span>
+        </div>
+    </div>
+</div>
+
+<!-- Main -->
+<div class="main" id="mainLayout" style="display:none;">
+    <!-- Left: Conversation -->
+    <div class="panel-conv">
+        <div class="panel-title">
+            <span>&#x1F4AC;</span> <span id="convTitle">Agent Conversation</span>
+        </div>
+        <div class="conv-messages" id="convMessages">
+            <div class="msg msg-agent" id="welcomeMsg">
+                <div class="msg-agent-label"><span class="agent-avatar"></span> Titan</div>
+                <div class="msg-agent-text" id="welcomeText">Welcome. I am your Titan super-agent. How can I help you today?</div>
+            </div>
+        </div>
+        <div class="conv-input-area">
+            <input type="text" class="conv-input" id="convInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMessage()">
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- Right: Agent Workspace -->
+    <div class="panel-wb" id="panelWb">
+        <div class="panel-title">
+            <span>&#x1F9E0;</span> Agent Workspace
+            <span class="wb-toggle" onclick="toggleWorkbench()">Collapse</span>
+        </div>
+        <div class="ws-workspace" id="wsWorkspace">
+            <div class="welcome" id="wbWelcome">
+                <div class="blackhole blackhole-lg" style="margin-bottom:20px; opacity:0.6;">
+                    <div class="blackhole-glow"></div>
+                    <div class="blackhole-disk"></div>
+                    <div class="blackhole-core"></div>
+                </div>
+                <div class="welcome-title">Agent Workspace</div>
+                <div class="welcome-sub">Send a message to see the agent's<br>real-time reasoning and tool execution here.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Intent Bar -->
+<div class="quick-bar" id="quickBar" style="display:none;">
+    <span class="quick-label">Quick:</span>
+    <div id="quickBtns"></div>
+    <div class="stats-bar" id="statsBar">
+        <div class="stat-chip"><div class="dot" style="background:var(--cat-perception)"></div><span id="statPerception">Percept x0</span></div>
+        <div class="stat-chip"><div class="dot" style="background:var(--cat-decision)"></div><span id="statDecision">Decide x0</span></div>
+        <div class="stat-chip"><div class="dot" style="background:var(--cat-execution)"></div><span id="statExecution">Execute x0</span></div>
+        <div class="stat-chip"><div class="dot" style="background:var(--cat-presentation)"></div><span id="statPresentation">Present x0</span></div>
+        <div class="stat-chip"><div class="dot" style="background:var(--cat-memory)"></div><span id="statMemory">Memory x0</span></div>
+    </div>
+</div>
+
+<script>
+// -- Config (loaded from /api/config) --
+let appConfig = {};
+let sessionId = 'session-' + Math.random().toString(36).slice(2, 10);
+
+// -- State --
+let chatHistory = [];
+let isProcessing = false;
+let cumulativeStats = { perception: 0, decision: 0, execution: 0, presentation: 0, memory: 0 };
+let chartCounter = 0;
+
+// -- Init: load config from backend --
+async function loadConfig() {
+    try {
+        const resp = await fetch('/api/config');
+        appConfig = await resp.json();
+    } catch(e) {
+        appConfig = {};
+    }
+    applyConfig();
+}
+
+function applyConfig() {
+    const title = appConfig.title || 'Titan Super-Agent';
+    const desc = appConfig.description || 'Super-Agent Product Platform';
+    const template = appConfig.template || 'custom';
+    const intents = appConfig.intents || [];
+
+    document.getElementById('loginSubtitle').textContent = desc;
+    document.getElementById('headerSub').textContent = desc;
+    document.title = `Titan - ${title}`;
+
+    // Build quick intent buttons
+    const container = document.getElementById('quickBtns');
+    if (intents.length > 0) {
+        container.innerHTML = intents.map(i =>
+            `<button class="quick-btn" onclick="sendPreset('${escapeHtml(i.message || i.name || '')}')">${escapeHtml(i.label || i.name || '')}</button>`
+        ).join('');
+    } else {
+        container.innerHTML = [
+            '<button class="quick-btn" onclick="sendPreset(\'What can you do?\')">Capabilities</button>',
+            '<button class="quick-btn" onclick="sendPreset(\'Show me the current status.\')">Status</button>',
+            '<button class="quick-btn" onclick="sendPreset(\'Help me with a task.\')">Help</button>',
+        ].join('');
+    }
+}
+
+// -- Login --
+function doLogin() {
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value;
+    const errEl = document.getElementById('loginError');
+    // Default: admin/admin. Templates can override via config.
+    const validUser = (appConfig.branding && appConfig.branding.login_user) || 'admin';
+    const validPass = (appConfig.branding && appConfig.branding.login_pass) || 'admin';
+    if (user === validUser && pass === validPass) {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('appHeader').style.display = '';
+        document.getElementById('mainLayout').style.display = '';
+        document.getElementById('quickBar').style.display = '';
+        // Load model info
+        loadHealth();
+    } else {
+        errEl.textContent = user === '' || pass === '' ? 'Please enter account and password' : 'Invalid credentials';
+        document.getElementById('loginPass').value = '';
+    }
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && document.getElementById('loginPage').style.display !== 'none') {
+        doLogin();
+    }
+});
+
+async function loadHealth() {
+    try {
+        const resp = await fetch('/api/health');
+        const data = await resp.json();
+        document.getElementById('modelLabel').textContent = data.model || '--';
+    } catch(e) {}
+}
+
+// -- Send message --
+function sendPreset(msg) {
+    if (isProcessing) return;
+    document.getElementById('convInput').value = msg;
+    sendMessage();
+}
+
+async function sendMessage() {
+    const input = document.getElementById('convInput');
+    const message = input.value.trim();
+    if (!message || isProcessing) return;
+
+    isProcessing = true;
+    input.value = '';
+    document.getElementById('sendBtn').disabled = true;
+    setStatus('busy', 'Agent reasoning...');
+
+    addUserMessage(message);
+    chatHistory.push({ role: 'user', content: message });
+
+    removeWelcome();
+    collapseOldCards();
+    const runId = Date.now();
+    createWorkspaceSession(runId);
+
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, history: chatHistory.slice(0, -1), session_id: sessionId }),
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let agentText = '';
+        let components = [];
+        let msgId = null;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                let evt;
+                try { evt = JSON.parse(line.slice(6)); } catch(e) { continue; }
+
+                switch (evt.type) {
+                    case 'THINKING_CONTENT':
+                        appendThinking(runId, evt.content);
+                        break;
+                    case 'TOOL_CALL_START':
+                        addToolStart(runId, evt);
+                        break;
+                    case 'TOOL_CALL_END':
+                        updateToolEnd(runId, evt);
+                        break;
+                    case 'TEXT_MESSAGE_START':
+                        msgId = evt.messageId;
+                        break;
+                    case 'TEXT_MESSAGE_CONTENT':
+                        agentText += evt.content;
+                        updateStreamingMessage(agentText);
+                        break;
+                    case 'TEXT_MESSAGE_END':
+                        finalizeStreamingMessage(agentText);
+                        break;
+                    case 'STATE_DELTA':
+                        components = evt.delta?.components || [];
+                        break;
+                    case 'CAPABILITY_STATS':
+                        updateStats(evt.stats);
+                        break;
+                    case 'SOLIDIFY_HINT':
+                        addSolidifyHint(runId, evt.hint || evt);
+                        break;
+                    case 'APPROVAL_REQUEST':
+                        addApprovalCard(evt);
+                        break;
+                    case 'RUN_FINISHED':
+                        finalizeThinking(runId);
+                        break;
+                }
+            }
+        }
+
+        if (agentText) {
+            addAgentMessage(agentText, components);
+            chatHistory.push({ role: 'assistant', content: agentText });
+        }
+    } catch(e) {
+        addAgentMessage('[Connection error] ' + e.message, []);
+    }
+
+    isProcessing = false;
+    document.getElementById('sendBtn').disabled = false;
+    setStatus('ready', 'Ready');
+}
+
+// -- UI Helpers --
+function setStatus(mode, text) {
+    document.getElementById('statusDot').className = mode === 'busy' ? 'status-dot busy' : 'status-dot';
+    document.getElementById('statusText').textContent = text;
+}
+
+function toggleWorkbench() {
+    document.getElementById('mainLayout').classList.toggle('workbench-collapsed');
+}
+
+function removeWelcome() {
+    const w = document.getElementById('wbWelcome');
+    if (w) w.remove();
+    const wm = document.getElementById('welcomeMsg');
+    if (wm) wm.remove();
+}
+
+function collapseOldCards() {
+    const ws = document.getElementById('wsWorkspace');
+    if (!ws) return;
+    const sessions = ws.querySelectorAll('[id^="ws-session-"]');
+    sessions.forEach(s => {
+        s.style.opacity = '0.4';
+        s.style.maxHeight = '40px';
+        s.style.overflow = 'hidden';
+        s.style.cursor = 'pointer';
+        s.onclick = function() { this.style.opacity = '1'; this.style.maxHeight = 'none'; this.style.overflow = ''; };
+    });
+    if (sessions.length > 2) {
+        for (let i = 0; i < sessions.length - 2; i++) sessions[i].remove();
+    }
+}
+
+function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+// -- Message rendering --
+function addUserMessage(text) {
+    const el = document.createElement('div');
+    el.className = 'msg msg-user';
+    el.innerHTML = `<div class="msg-bubble">${escapeHtml(text)}</div>`;
+    document.getElementById('convMessages').appendChild(el);
+    scrollConv();
+}
+
+let streamingMsgEl = null;
+function updateStreamingMessage(text) {
+    if (!streamingMsgEl) {
+        streamingMsgEl = document.createElement('div');
+        streamingMsgEl.className = 'msg msg-agent';
+        streamingMsgEl.innerHTML = `
+            <div class="msg-agent-label"><span class="agent-avatar"></span> Titan</div>
+            <div class="msg-agent-text streaming"></div>
+        `;
+        document.getElementById('convMessages').appendChild(streamingMsgEl);
+    }
+    streamingMsgEl.querySelector('.msg-agent-text').textContent = text;
+    scrollConv();
+}
+
+function finalizeStreamingMessage(text) {
+    if (streamingMsgEl) {
+        const textEl = streamingMsgEl.querySelector('.msg-agent-text');
+        textEl.classList.remove('streaming');
+        textEl.innerHTML = formatMarkdown(text);
+    }
+    streamingMsgEl = null;
+}
+
+function addAgentMessage(text, components) {
+    if (streamingMsgEl) {
+        finalizeStreamingMessage(text);
+    } else {
+        const el = document.createElement('div');
+        el.className = 'msg msg-agent';
+        el.innerHTML = `
+            <div class="msg-agent-label"><span class="agent-avatar"></span> Titan</div>
+            <div class="msg-agent-text">${formatMarkdown(text)}</div>
+        `;
+        document.getElementById('convMessages').appendChild(el);
+    }
+    // Render components
+    if (components && components.length > 0) {
+        const container = document.createElement('div');
+        container.className = 'msg msg-components';
+        components.forEach((comp, idx) => {
+            container.innerHTML += renderComponent(comp, idx);
+        });
+        document.getElementById('convMessages').appendChild(container);
+        initCharts(container);
+    }
+    scrollConv();
+}
+
+function formatMarkdown(text) {
+    // Simple markdown: bold, inline code
+    return escapeHtml(text)
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`(.*?)`/g, '<code style="background:rgba(6,182,212,0.1);padding:1px 4px;border-radius:3px;font-size:12px;color:var(--accent-cyan)">$1</code>')
+        .replace(/\n/g, '<br>');
+}
+
+function scrollConv() {
+    const el = document.getElementById('convMessages');
+    el.scrollTop = el.scrollHeight;
+}
+
+// -- Workspace session --
+function createWorkspaceSession(runId) {
+    const ws = document.getElementById('wsWorkspace');
+    const session = document.createElement('div');
+    session.className = 'ws-session';
+    session.id = `ws-session-${runId}`;
+    session.innerHTML = `
+        <div class="ws-session-header">Session ${new Date().toLocaleTimeString()}</div>
+        <div id="ws-visual-${runId}"></div>
+    `;
+    ws.appendChild(session);
+    ws.scrollTop = ws.scrollHeight;
+}
+
+function appendThinking(runId, content) {
+    const visual = document.getElementById(`ws-visual-${runId}`);
+    if (!visual) return;
+    let block = document.getElementById(`thinking-${runId}`);
+    if (!block) {
+        const card = document.createElement('div');
+        card.className = 'ws-vcard';
+        card.innerHTML = `
+            <div class="ws-vcard-header">
+                <div class="ws-vcard-icon">&#x1F9E0;</div>
+                <div class="ws-vcard-title">Thinking</div>
+                <div class="ws-vcard-status running" id="thinking-status-${runId}">reasoning...</div>
+            </div>
+            <div class="ws-vcard-body">
+                <div class="thinking-block" id="thinking-${runId}"></div>
+            </div>
+        `;
+        visual.appendChild(card);
+    }
+    block = document.getElementById(`thinking-${runId}`);
+    block.textContent += content;
+    block.scrollTop = block.scrollHeight;
+}
+
+function finalizeThinking(runId) {
+    const status = document.getElementById(`thinking-status-${runId}`);
+    if (status) { status.className = 'ws-vcard-status done'; status.textContent = 'done'; }
+}
+
+function addToolStart(runId, evt) {
+    const visual = document.getElementById(`ws-visual-${runId}`);
+    if (!visual) return;
+    let container = document.getElementById(`tools-${runId}`);
+    if (!container) {
+        const card = document.createElement('div');
+        card.className = 'ws-vcard';
+        card.innerHTML = `
+            <div class="ws-vcard-header">
+                <div class="ws-vcard-icon">&#x1F527;</div>
+                <div class="ws-vcard-title">Tool Execution</div>
+                <div class="ws-vcard-status running" id="tools-status-${runId}">running</div>
+            </div>
+            <div class="ws-vcard-body" id="tools-${runId}"></div>
+        `;
+        visual.appendChild(card);
+    }
+    container = document.getElementById(`tools-${runId}`);
+    const catColors = {
+        perception: 'var(--cat-perception)', decision: 'var(--cat-decision)',
+        execution: 'var(--cat-execution)', presentation: 'var(--cat-presentation)', memory: 'var(--cat-memory)'
+    };
+    const cat = evt.category || 'perception';
+    const trace = document.createElement('div');
+    trace.className = 'tool-trace running';
+    trace.id = `tool-${evt.toolCallId}`;
+    trace.innerHTML = `
+        <span class="tool-category" style="background:${catColors[cat] || catColors.perception}22;color:${catColors[cat] || catColors.perception}">${cat}</span>
+        <span class="tool-name">${escapeHtml(evt.name || '')}</span>
+        <span class="tool-result" id="tool-result-${evt.toolCallId}">running...</span>
+    `;
+    container.appendChild(trace);
+}
+
+function updateToolEnd(runId, evt) {
+    const trace = document.getElementById(`tool-${evt.toolCallId}`);
+    if (trace) {
+        trace.className = 'tool-trace done';
+        const result = evt.result || '';
+        const display = result.length > 60 ? result.slice(0, 60) + '...' : result;
+        document.getElementById(`tool-result-${evt.toolCallId}`).textContent = display;
+        if (evt.duration_ms) {
+            const time = document.createElement('span');
+            time.className = 'tool-time';
+            time.textContent = evt.duration_ms + 'ms';
+            trace.appendChild(time);
+        }
+    }
+    const status = document.getElementById(`tools-status-${runId}`);
+    if (status) { status.className = 'ws-vcard-status done'; status.textContent = 'done'; }
+}
+
+function addSolidifyHint(runId, hint) {
+    const visual = document.getElementById(`ws-visual-${runId}`);
+    if (!visual) return;
+    const div = document.createElement('div');
+    div.className = 'ws-vcard';
+    div.innerHTML = `
+        <div class="ws-vcard-header">
+            <div class="ws-vcard-icon">&#x1F4A1;</div>
+            <div class="ws-vcard-title">Solidify Suggestion</div>
+        </div>
+        <div class="ws-vcard-body">
+            <div style="padding:8px;font-size:12px;color:var(--text-secondary)">
+                Pattern detected ${hint.count || '?'} times, similarity ${((hint.similarity || 0) * 100).toFixed(0)}%. ${hint.suggestion || 'Consider solidifying into automated workflow.'}
+            </div>
+        </div>
+    `;
+    visual.appendChild(div);
+}
+
+function addApprovalCard(evt) {
+    const cardId = 'approval-' + Date.now();
+    const options = evt.options || ['Approve', 'Reject'];
+    let btns = options.map((opt, i) =>
+        `<button class="approval-btn ${i === 0 ? 'primary' : 'secondary'}" onclick="handleApproval('${cardId}', '${escapeHtml(opt)}')">${escapeHtml(opt)}</button>`
+    ).join('');
+    const el = document.createElement('div');
+    el.className = 'msg msg-components';
+    el.id = cardId;
+    el.innerHTML = `<div class="comp-container"><div class="comp-body"><div class="approval-card-inner">
+        <div class="approval-title">${escapeHtml(evt.title || 'Approval Required')}</div>
+        <div class="approval-desc">${escapeHtml(evt.description || '')}</div>
+        <div class="approval-btns">${btns}</div>
+    </div></div></div>`;
+    document.getElementById('convMessages').appendChild(el);
+    scrollConv();
+}
+
+function handleApproval(cardId, choice) {
+    const card = document.getElementById(cardId);
+    if (card) card.querySelector('.comp-body').innerHTML = `<div class="approval-done">Approved: ${escapeHtml(choice)}</div>`;
+}
+
+function updateStats(stats) {
+    if (!stats) return;
+    for (const key of ['perception', 'decision', 'execution', 'presentation', 'memory']) {
+        cumulativeStats[key] += (stats[key] || 0);
+    }
+    document.getElementById('statPerception').textContent = `Percept x${cumulativeStats.perception}`;
+    document.getElementById('statDecision').textContent = `Decide x${cumulativeStats.decision}`;
+    document.getElementById('statExecution').textContent = `Execute x${cumulativeStats.execution}`;
+    document.getElementById('statPresentation').textContent = `Present x${cumulativeStats.presentation}`;
+    document.getElementById('statMemory').textContent = `Memory x${cumulativeStats.memory}`;
+}
+
+// -- Component Renderers --
+function renderComponent(comp, idx) {
+    const type = comp.type;
+    const data = comp.data || {};
+    switch (type) {
+        case 'metric_card': return renderMetricCard(data);
+        case 'line_chart': return renderChart(data, 'line', idx);
+        case 'bar_chart': return renderChart(data, 'bar', idx);
+        case 'pie_chart': return renderPieChart(data, idx);
+        case 'table': return renderTable(data);
+        case 'timeline': return renderTimeline(data);
+        case 'approval_card': return renderApprovalCardComp(data);
+        default: return `<div class="comp-container"><div class="comp-body">[Unknown component: ${escapeHtml(type)}]</div></div>`;
+    }
+}
+
+function renderMetricCard(d) {
+    const color = d.color || 'cyan';
+    return `<div class="metric-card">
+        <div class="metric-value color-${color}">${escapeHtml(String(d.value))}</div>
+        <div class="metric-label">${escapeHtml(d.label || '')}${d.unit ? ' (' + escapeHtml(d.unit) + ')' : ''}</div>
+    </div>`;
+}
+
+function renderChart(d, chartType, idx) {
+    const cid = `chart-${Date.now()}-${idx}-${chartCounter++}`;
+    return `<div class="comp-container">
+        ${d.title ? `<div class="comp-title">${escapeHtml(d.title)}</div>` : ''}
+        <div class="comp-body"><div class="chart-container" id="${cid}" data-chart-type="${chartType}" data-chart='${JSON.stringify(d)}'></div></div>
+    </div>`;
+}
+
+function renderPieChart(d, idx) {
+    const cid = `chart-${Date.now()}-${idx}-${chartCounter++}`;
+    return `<div class="comp-container">
+        ${d.title ? `<div class="comp-title">${escapeHtml(d.title)}</div>` : ''}
+        <div class="comp-body"><div class="chart-container" id="${cid}" data-chart-type="pie" data-chart='${JSON.stringify(d)}'></div></div>
+    </div>`;
+}
+
+function renderTable(d) {
+    const cols = d.columns || [];
+    const rows = d.rows || [];
+    let html = `<div class="comp-container">`;
+    if (d.title) html += `<div class="comp-title">${escapeHtml(d.title)}</div>`;
+    html += `<div class="comp-body"><table class="comp-table"><thead><tr>`;
+    cols.forEach(c => { html += `<th>${escapeHtml(c)}</th>`; });
+    html += `</tr></thead><tbody>`;
+    rows.forEach(row => {
+        html += '<tr>';
+        row.forEach(cell => { html += `<td>${escapeHtml(String(cell))}</td>`; });
+        html += '</tr>';
+    });
+    html += `</tbody></table></div></div>`;
+    return html;
+}
+
+function renderTimeline(d) {
+    const events = d.events || [];
+    let html = `<div class="comp-container">`;
+    if (d.title) html += `<div class="comp-title">${escapeHtml(d.title)}</div>`;
+    html += `<div class="comp-body"><div class="timeline">`;
+    events.forEach(e => {
+        html += `<div class="tl-item">
+            <div class="tl-dot ${e.severity || ''}"></div>
+            <div class="tl-time">${escapeHtml(e.time || '')}</div>
+            <div class="tl-title">${escapeHtml(e.title || '')}</div>
+            <div class="tl-desc">${escapeHtml(e.desc || '')}</div>
+        </div>`;
+    });
+    html += `</div></div></div>`;
+    return html;
+}
+
+function renderApprovalCardComp(d) {
+    const cardId = `approval-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+    const options = d.options || ['Approve', 'Reject'];
+    let btns = options.map((opt, i) =>
+        `<button class="approval-btn ${i === 0 ? 'primary' : 'secondary'}" onclick="handleApproval('${cardId}', '${escapeHtml(opt)}')">${escapeHtml(opt)}</button>`
+    ).join('');
+    return `<div class="comp-container" id="${cardId}"><div class="comp-body"><div class="approval-card-inner">
+        <div class="approval-title">${escapeHtml(d.title || 'Approval Required')}</div>
+        <div class="approval-desc">${escapeHtml(d.description || '')}</div>
+        <div class="approval-btns">${btns}</div>
+    </div></div></div>`;
+}
+
+function initCharts(container) {
+    if (typeof echarts === 'undefined') return;
+    const chartEls = container.querySelectorAll('.chart-container[data-chart]');
+    chartEls.forEach(el => {
+        const chartType = el.getAttribute('data-chart-type');
+        let data;
+        try { data = JSON.parse(el.getAttribute('data-chart')); } catch(e) { return; }
+        const chart = echarts.init(el, null, { renderer: 'canvas' });
+        const textColor = '#94a3b8';
+        if (chartType === 'pie') {
+            chart.setOption({
+                tooltip: { trigger: 'item' },
+                series: [{ type: 'pie', radius: ['40%', '70%'], data: (data.items || []).map(i => ({ name: i.name, value: i.value })),
+                    label: { color: textColor, fontSize: 11 }, itemStyle: { borderRadius: 6, borderColor: '#0a0e17', borderWidth: 2 } }]
+            });
+        } else {
+            chart.setOption({
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: data.labels || [], axisLabel: { color: textColor, fontSize: 10 }, axisLine: { lineStyle: { color: '#2a3a4e' } } },
+                yAxis: { type: 'value', axisLabel: { color: textColor, fontSize: 10 }, splitLine: { lineStyle: { color: '#1a2332' } } },
+                series: (data.series || [{ data: data.values || [] }]).map(s => ({
+                    type: chartType, data: s.data || s.values || [], name: s.name || '',
+                    smooth: chartType === 'line',
+                    areaStyle: chartType === 'line' ? { opacity: 0.15 } : undefined,
+                    itemStyle: { borderRadius: chartType === 'bar' ? [4, 4, 0, 0] : undefined }
+                })),
+                grid: { left: 40, right: 16, top: 16, bottom: 30 },
+            });
+        }
+        new ResizeObserver(() => chart.resize()).observe(el);
+    });
+}
+
+// -- Boot --
+loadConfig();
+</script>
+</body>
+</html>

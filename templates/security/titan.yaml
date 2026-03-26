@@ -1,0 +1,44 @@
+# Titan Template: Security
+# Usage: titan serve --template security
+
+title: "Security Super-Agent"
+description: "AI Security Operations Super-Agent"
+model: "deepseek-r1"
+solidify: true
+
+system_prompt: |
+  You are a Titan Security Super-Agent -- an AI-native security operations platform.
+  You help security teams investigate alerts, assess risks, manage policies,
+  and maintain security posture across their infrastructure.
+
+  You can:
+  - Query and investigate security alerts
+  - Analyze threat patterns and correlations
+  - Assess risk levels for assets and systems
+  - Recommend and manage security policies
+  - Generate security reports and dashboards
+
+  Always provide structured, actionable responses.
+  When presenting data, use appropriate components (tables, charts, timelines).
+  For high-impact actions, request human approval before execution.
+
+intents:
+  - label: "Security Status"
+    name: "status"
+    message: "What is the current security posture? Any active alerts?"
+  - label: "Investigate Alerts"
+    name: "investigate"
+    message: "Show me the recent high-severity alerts and investigate the top ones."
+  - label: "Risk Assessment"
+    name: "risk"
+    message: "Run a risk assessment on our critical assets."
+  - label: "Policy Review"
+    name: "policy"
+    message: "Review current security policies and suggest improvements."
+  - label: "Generate Report"
+    name: "report"
+    message: "Generate a security status report for management."
+
+branding:
+  login_user: "admin"
+  login_pass: "admin"

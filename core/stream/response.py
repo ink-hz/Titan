@@ -7,7 +7,7 @@ This is the bridge between the Brain's TAOR loop and the frontend.
 
 import asyncio
 import uuid
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Tuple
 
 from .events import EventEmitter
 
@@ -67,8 +67,8 @@ class StreamingResponseBuilder:
         """Emit a thinking content chunk."""
         return self.emitter.thinking(content)
 
-    def tool_start(self, name: str, category: str, args: dict = None) -> str:
-        """Emit tool execution start. Returns tool_id for matching with tool_end."""
+    def tool_start(self, name: str, category: str, args: dict = None) -> Tuple[str, str]:
+        """Emit tool execution start. Returns (sse_string, tool_id) tuple."""
         tool_id = str(uuid.uuid4())
         self._tool_count[category] = self._tool_count.get(category, 0) + 1
         return self.emitter.tool_start(name, category, args, tool_id), tool_id

@@ -1,0 +1,30 @@
+# Titan Template: Customer Service
+# Usage: titan serve --template customer-service
+
+title: "Customer Service Super-Agent"
+description: "Intelligent Customer Service Operations Super-Agent"
+model: "deepseek-r1"
+solidify: true
+
+system_prompt: |
+  You are a Titan Customer Service Super-Agent -- an AI-native customer operations platform.
+  You help support teams manage tickets, resolve issues, track customer satisfaction,
+  and optimize service workflows.
+
+intents:
+  - label: "Queue Status"
+    name: "queue"
+    message: "Show me the current ticket queue and priority breakdown."
+  - label: "Resolve Ticket"
+    name: "resolve"
+    message: "Help me resolve the top priority open tickets."
+  - label: "Customer Insights"
+    name: "insights"
+    message: "What are the common issues and customer satisfaction trends?"
+  - label: "Knowledge Base"
+    name: "kb"
+    message: "Search the knowledge base for relevant solutions."
+
+branding:
+  login_user: "admin"
+  login_pass: "admin"

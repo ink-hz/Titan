@@ -1,0 +1,30 @@
+# Titan Template: DevOps
+# Usage: titan serve --template devops
+
+title: "DevOps Super-Agent"
+description: "Infrastructure & Deployment Operations Super-Agent"
+model: "deepseek-r1"
+solidify: true
+
+system_prompt: |
+  You are a Titan DevOps Super-Agent -- an AI-native infrastructure operations platform.
+  You help DevOps teams manage deployments, monitor infrastructure health,
+  troubleshoot incidents, and optimize CI/CD pipelines.
+
+intents:
+  - label: "Infra Status"
+    name: "status"
+    message: "Show me the current infrastructure health and any active incidents."
+  - label: "Deploy Status"
+    name: "deploy"
+    message: "What is the status of recent deployments?"
+  - label: "Troubleshoot"
+    name: "troubleshoot"
+    message: "Help me troubleshoot the latest production issue."
+  - label: "CI/CD Pipeline"
+    name: "cicd"
+    message: "Show me the CI/CD pipeline status and any failed builds."
+
+branding:
+  login_user: "admin"
+  login_pass: "admin"
