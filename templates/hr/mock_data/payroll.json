@@ -1,0 +1,22 @@
+{
+  "month": "2026-03",
+  "total_employees": 358,
+  "total_gross": 12580000,
+  "total_deductions": 4018000,
+  "total_net": 8562000,
+  "total_tax": 892000,
+  "avg_salary": 35140,
+  "payroll_status": "calculated",
+  "cost_trend": [
+    {"month": "2025-10", "cost": 11200000},
+    {"month": "2025-11", "cost": 11450000},
+    {"month": "2025-12", "cost": 11800000},
+    {"month": "2026-01", "cost": 12100000},
+    {"month": "2026-02", "cost": 12350000},
+    {"month": "2026-03", "cost": 12580000}
+  ],
+  "anomalies": [
+    {"type": "社保基数异常", "employee": "刘某", "detail": "基数低于当地最低标准"},
+    {"type": "加班超标", "employee": "技术部3人", "detail": "月加班超过36小时"}
+  ]
+}

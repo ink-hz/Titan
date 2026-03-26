@@ -39,12 +39,22 @@ The gap is enormous: intent understanding, capability self-production, experienc
 from titan import AgentBrain, serve
 
 brain = AgentBrain(model="deepseek-r1")
-brain.register_tools("./tools/")          # MCP tools auto-discovered
-brain.enable_solidify()                    # Experience solidification ON
+brain.register_tools("./tools/")        # 28 HR tools auto-discovered
+brain.enable_solidify()                  # Onboarding workflow → deterministic after 30 runs
 serve(brain, ui="panorama+chat+workspace", port=8086)
 ```
 
-Open `http://localhost:8086` — you get a full agent product with Panorama architecture view, Manus-style workspace, and conversational interface. Out of the box.
+Or use the built-in HR template:
+
+```bash
+pip install titan-agent
+titan init hr
+cd titan-hr
+titan serve
+# Open http://localhost:8086 → Full HR Super-Agent with 6 specialized agents
+```
+
+Open `http://localhost:8086` — you get a full HR super-agent product with Panorama architecture view, Manus-style workspace, and conversational interface. Out of the box.
 
 ---
 
@@ -57,8 +67,9 @@ Traditional products force users through pre-designed journeys: click here, fill
 Users express **intent** in natural language. The Agent Brain decomposes the intent, routes to the right specialists, orchestrates execution, and delivers results. No menus, no forms, no workflows to memorize.
 
 ```
-User: "Block all IPs from Russia that hit our login endpoint more than 100 times today"
-Titan: decomposes → routes to ThreatIntel + WAFAgent → executes → confirms
+User: "张三下周一入职，产品经理岗，base北京"
+Titan: decomposes → routes to RecruitAgent + OnboardAgent + PayrollAgent →
+       自动生成offer、创建账号、准备工位、发送入职通知 → confirms
 ```
 
 ### 2. Schema-Constrained AI Production
@@ -68,18 +79,20 @@ Agents in Titan don't just *use* tools — they **produce new capabilities**: de
 Every production act is bounded by a **Schema** — a formal contract that defines the solution space. The AI generates within that space; Titan validates automatically.
 
 ```yaml
-# schema: detection_rule.v1
+# schema: labor_contract.v1
 type: object
-required: [name, condition, action, severity]
+required: [employee_name, position, salary, start_date, contract_type]
 properties:
-  condition:
-    type: string
-    pattern: "^(ip|path|header|body)\\."   # constrained vocabulary
-  action:
-    enum: [block, alert, throttle, captcha]
+  contract_type:
+    enum: [fixed_term, open_ended, internship, part_time]
+  salary:
+    type: number
+    minimum: 2320              # 当地最低工资标准
+  probation_months:
+    maximum: 6                 # 劳动法上限
 ```
 
-The AI produces a rule. Titan validates it against the schema. If it passes — deployed. If not — the AI self-corrects. **Bounded creativity, zero drift.**
+The AI produces a labor contract. Titan validates it against the schema and labor law constraints. If it passes — deployed. If not — the AI self-corrects. **Bounded creativity, zero drift.**
 
 ### 3. Experience Solidification
 
@@ -88,8 +101,8 @@ The first time an agent handles an intent, it reasons step-by-step via LLM. Expe
 Titan watches. When the same pattern succeeds repeatedly, it **solidifies** the path into a deterministic workflow — no LLM needed. The agent gets faster and cheaper with every interaction.
 
 ```
-Day 1:  "Block brute-force IPs" → LLM reasoning → 3s, $0.02
-Day 30: "Block brute-force IPs" → solidified workflow → 50ms, $0.00
+Day 1:  "办理新员工入职" → LLM reasoning → 3s, $0.02
+Day 30: "办理新员工入职" → solidified workflow → 50ms, $0.00
 ```
 
 Solidified workflows are versioned, auditable, and can be manually edited. When the world changes, Titan detects drift and re-engages the LLM to adapt.
@@ -104,7 +117,7 @@ Titan organizes agents in a clear three-tier hierarchy:
 │         (Superintendent)                │    delegation, experience management
 ├──────────┬──────────┬───────────────────┤
 │ Specialist│ Specialist│    ...           │  ← Domain-specific execution
-│ Agent A   │ Agent B   │                 │    (Security, DevOps, Analytics...)
+│ Agent A   │ Agent B   │                 │    (招聘/入职/薪酬/员工关系/培训绩效/问答)
 ├──────────┴──────────┴───────────────────┤
 │           Factory Agents                │  ← Produce new rules, agents,
 │      (Rule / Agent / Workflow)          │    workflows under schema constraints
@@ -120,9 +133,9 @@ Titan organizes agents in a clear three-tier hierarchy:
 Multiple Super-Agents (each a full Titan instance) collaborate by exchanging **natural-language intents** — not API calls, not rigid contracts.
 
 ```
-SecurityAgent → DevOpsAgent:
-  intent: "The service cart-api is under DDoS. Scale to 10 replicas
-           and enable rate-limiting at the ingress."
+RecruitAgent → OnboardAgent:
+  intent: "张三已接受Offer，产品经理岗，4月1日入职北京办公室，
+           请准备工位、账号、设备，并安排第一周培训。"
 ```
 
 No API design. No versioning headaches. The receiving agent understands the intent and acts. This is how humans collaborate — Titan brings the same pattern to agents.
@@ -189,14 +202,15 @@ Titan ships with production-ready templates for common domains:
 
 | Template | Path | Description |
 |----------|------|-------------|
+| HR (default) | `templates/hr/` | Full HR super-agent: 招聘、入职、薪酬、员工关系、培训绩效、智能问答 6 大 Agent |
 | AI Security | `templates/security/` | Full AEGIS-style security super-agent: threat detection, incident response, WAF management |
 | DevOps | `templates/devops/` | Infrastructure monitoring, deployment automation, incident triage |
 | Customer Service | `templates/customer-service/` | Multi-channel support, knowledge base, escalation |
 | Data Analysis | `templates/data-analysis/` | Natural-language queries, automated reporting, anomaly detection |
 
 ```bash
-titan init --template security my-security-agent
-cd my-security-agent
+titan init hr
+cd titan-hr
 titan serve
 ```
 

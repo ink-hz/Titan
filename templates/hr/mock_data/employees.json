@@ -1,0 +1,31 @@
+{
+  "summary": {
+    "total_active": 358,
+    "total_probation": 23,
+    "new_this_month": 15,
+    "left_this_month": 3,
+    "turnover_rate": 0.021,
+    "industry_avg_turnover": 0.058,
+    "avg_tenure_months": 28,
+    "gender_ratio": {"male": 0.58, "female": 0.42},
+    "avg_age": 29.5
+  },
+  "departments": [
+    {"name": "产品部", "headcount": 45, "head": "王总监", "budget_usage": 0.82},
+    {"name": "技术部", "headcount": 128, "head": "李CTO", "budget_usage": 0.91},
+    {"name": "市场部", "headcount": 56, "head": "赵VP", "budget_usage": 0.75},
+    {"name": "运营部", "headcount": 67, "head": "刘总监", "budget_usage": 0.68},
+    {"name": "HR/行政", "headcount": 32, "head": "陈HRD", "budget_usage": 0.55},
+    {"name": "财务部", "headcount": 30, "head": "黄CFO", "budget_usage": 0.60}
+  ],
+  "recent_onboards": [
+    {"name": "张三", "position": "高级产品经理", "dept": "产品部", "start_date": "2026-04-01", "status": "pending"},
+    {"name": "小王", "position": "前端工程师", "dept": "技术部", "start_date": "2026-03-25", "status": "completed"},
+    {"name": "小李", "position": "运营专员", "dept": "运营部", "start_date": "2026-03-20", "status": "completed"}
+  ],
+  "risk_alerts": [
+    {"employee": "孙八", "type": "离职倾向", "score": 85, "signals": ["近期频繁请假", "更新了简历"]},
+    {"employee": "周九", "type": "合同到期", "days_remaining": 15, "action": "需发起续签"},
+    {"employee": "吴十", "type": "绩效异常", "detail": "连续2个周期绩效C"}
+  ]
+}

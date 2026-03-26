@@ -1,0 +1,16 @@
+{
+  "cycle": "2026-Q1",
+  "total_evaluated": 358,
+  "completion_rate": 0.92,
+  "distribution": {"S": 18, "A": 72, "B+": 143, "B": 89, "C": 36},
+  "avg_score": 82.5,
+  "top_performers": [
+    {"name": "张明", "dept": "技术部", "score": 97, "highlight": "主导完成核心架构重构"},
+    {"name": "李华", "dept": "产品部", "score": 95, "highlight": "新产品DAU增长300%"},
+    {"name": "王芳", "dept": "市场部", "score": 93, "highlight": "品牌知名度提升50%"}
+  ],
+  "attention_needed": [
+    {"name": "吴十", "dept": "运营部", "score": 45, "issue": "连续2个周期C，建议PIP"},
+    {"name": "郑某", "dept": "技术部", "score": 52, "issue": "目标完成率仅40%"}
+  ]
+}

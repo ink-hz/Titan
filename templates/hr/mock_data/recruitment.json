@@ -1,0 +1,21 @@
+{
+  "open_positions": 12,
+  "total_resumes_this_month": 856,
+  "interviews_scheduled": 34,
+  "offers_sent": 5,
+  "offers_accepted": 3,
+  "pipeline": [
+    {"stage": "简历收集", "count": 856},
+    {"stage": "AI筛选通过", "count": 234},
+    {"stage": "HR初筛", "count": 89},
+    {"stage": "面试中", "count": 34},
+    {"stage": "Offer阶段", "count": 5},
+    {"stage": "已入职", "count": 3}
+  ],
+  "hot_positions": [
+    {"title": "高级产品经理", "applicants": 156, "urgency": "high"},
+    {"title": "算法工程师", "applicants": 89, "urgency": "high"},
+    {"title": "前端工程师", "applicants": 234, "urgency": "medium"},
+    {"title": "HRBP", "applicants": 67, "urgency": "low"}
+  ]
+}
