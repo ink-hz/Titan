@@ -6,8 +6,8 @@ version: "0.1.0"
 
 # Login credentials for demo
 auth:
-  username: "admin"
-  password: "admin"
+  username: "ink"
+  password: "10086"
 
 # System prompt for the HR Brain
 system_prompt: |

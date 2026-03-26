@@ -1,26 +1,19 @@
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "titan-agent"
 version = "0.1.0"
-description = "Titan -- Build Super-Intelligent Agent Products. From Agent Framework to Agent Product."
+description = "Titan — Build Super-Intelligent Agent Products. From Agent Framework to Agent Product."
 readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
-authors = [
-    {name = "ink-hz"},
-]
+authors = [{name = "ink-hz"}]
 keywords = ["ai", "agent", "llm", "super-agent", "mcp", "framework"]
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
@@ -33,17 +26,23 @@ dependencies = [
 
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.20.0"]
-all = ["anthropic>=0.20.0"]
 
 [project.scripts]
 titan = "titan.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/ink-hz/Titan"
-Repository = "https://github.com/ink-hz/Titan"
 
-[tool.setuptools.packages.find]
-include = ["titan*"]
+[tool.setuptools]
+packages = ["titan", "titan.core", "titan.core.brain", "titan.core.agents",
+            "titan.core.factory", "titan.core.model", "titan.core.prompt",
+            "titan.core.schema", "titan.core.session", "titan.core.solidify",
+            "titan.core.stream", "titan.core.trust", "titan.core.verify",
+            "titan.capability", "titan.capability.mcp",
+            "titan.collab", "titan.collab.intent", "titan.ui"]
+
+[tool.setuptools.package-dir]
+"titan" = "."
 
 [tool.setuptools.package-data]
 titan = ["ui/static/**/*", "templates/**/*"]

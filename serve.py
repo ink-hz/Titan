@@ -371,7 +371,11 @@ def serve(
             "description": template_config.get("description", ""),
             "intents": template_config.get("intents", []),
             "ui_modes": list(ui_modes),
-            "branding": template_config.get("branding", {}),
+            "branding": {
+                "login_user": template_config.get("auth", {}).get("username", "admin"),
+                "login_pass": template_config.get("auth", {}).get("password", "admin"),
+                **template_config.get("branding", {}),
+            },
         })
 
     # ---- Helpers -----------------------------------------------------------
